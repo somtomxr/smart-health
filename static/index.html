@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title id="page-title">Smart Health – District Command Center</title>
+  <meta name="description" content="AI-powered District Health Command Center for real-time PHC/CHC monitoring, demand forecasting, medicine redistribution, and automated emergency escalation.">
+  <meta name="theme-color" content="#070d18">
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<a class="skip-link" href="#main" id="skip-link">Skip to main command view</a>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     HEADER / TOP COMMAND BAR
+     ═══════════════════════════════════════════════════════════════ -->
+<header class="top-bar" role="banner">
+  <div class="brand-cluster">
+    <div class="brand-crest" aria-hidden="true">
+      <span class="crest-icon">🏥</span>
+      <span class="crest-pulse"></span>
+    </div>
+    <div class="brand-titles">
+      <div class="brand-row">
+        <h1 class="brand-name" id="site-title">Smart Health</h1>
+        <span class="live-pill" id="live-indicator">
+          <span class="live-dot"></span>
+          <span id="live-text">LIVE 24/7 TELEMETRY</span>
+        </span>
+      </div>
+      <p class="brand-sub" id="site-sub">District Health Intelligence &amp; Crisis Command • Bengaluru Rural</p>
+    </div>
+  </div>
+
+  <div class="controls-cluster">
+    <!-- Language Switcher (Segmented Pill - No inline onclick) -->
+    <div class="lang-switch" role="group" aria-label="Dashboard Language">
+      <button class="lang-btn active" id="lang-en" type="button" aria-pressed="true" data-lang="en">EN</button>
+      <button class="lang-btn"        id="lang-hi" type="button" aria-pressed="false" data-lang="hi">हिन्दी</button>
+      <button class="lang-btn"        id="lang-kn" type="button" aria-pressed="false" data-lang="kn">ಕನ್ನಡ</button>
+    </div>
+
+    <div class="toolbar-sep" aria-hidden="true"></div>
+
+    <!-- Admin Token Input -->
+    <div class="token-wrap">
+      <label for="tok" class="token-label" id="lbl-token">Admin Token</label>
+      <input id="tok" type="password" autocomplete="off" maxlength="64" placeholder="demo-admin" aria-label="Admin authentication token">
+    </div>
+
+    <!-- Refresh Action Button -->
+    <button id="refresh-btn" class="action-btn primary-action" type="button" aria-label="Refresh telemetry data">
+      <svg class="refresh-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+      </svg>
+      <span id="lbl-refresh">Sync</span>
+    </button>
+  </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     STATUS TICKER & INCIDENT RIBBON
+     ═══════════════════════════════════════════════════════════════ -->
+<div class="status-ribbon" role="region" aria-label="System Status">
+  <div class="ribbon-content">
+    <div class="ribbon-item">
+      <span class="status-indicator-dot" id="system-pulse"></span>
+      <span class="ribbon-label" id="lbl-status-sync">Status:</span>
+      <span class="ribbon-val" id="status-text">Connecting to telemetry network…</span>
+    </div>
+    <div class="ribbon-item alert-summary" id="incident-summary">
+      <span class="crit-badge-dot"></span>
+      <span id="incident-text">Scanning 12 Health Centres…</span>
+    </div>
+    <div class="ribbon-item auto-refresh-box">
+      <span id="lbl-refresh-in">Next sync in</span>
+      <span class="countdown-badge" id="countdown">30s</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     MAIN COMMAND DASHBOARD
+     ═══════════════════════════════════════════════════════════════ -->
+<main id="main" class="command-grid" tabindex="-1">
+
+  <!-- ── 1. DISTRICT HERO TELEMETRY KPIS ── -->
+  <section class="telemetry-banner" aria-labelledby="lbl-kpi-heading">
+    <div class="section-header">
+      <div class="section-title-wrap">
+        <span class="section-tag" id="tag-overview">DISTRICT TELEMETRY</span>
+        <h2 class="section-title" id="lbl-kpi-heading">District Overview &amp; Vital Statistics</h2>
+      </div>
+      <span class="district-badge" id="lbl-centres-monitored">12 Centres Active (10 PHCs • 2 CHCs)</span>
+    </div>
+    <div id="kpis" class="kpis-grid" role="region" aria-label="Key Performance Indicators"></div>
+  </section>
+
+  <!-- ── 2. MAP & CRISIS INTERVENTION SPLIT ── -->
+  <section class="grid-split" aria-label="District GIS Map and Crisis Center">
+    
+    <!-- Left: Tactical GIS Map -->
+    <div class="glass-card map-panel">
+      <div class="card-header">
+        <div class="card-title-group">
+          <span class="card-icon" aria-hidden="true">🗺️</span>
+          <h2 class="card-heading" id="lbl-map-card">District Intelligence GIS Map</h2>
+        </div>
+        <!-- Status Filter Pills -->
+        <div class="map-filters" role="group" aria-label="Filter centres on map">
+          <button class="filter-chip active" id="filter-all" type="button" data-filter="all">All (12)</button>
+          <button class="filter-chip crit-filter" id="filter-crit" type="button" data-filter="critical">🚨 Critical</button>
+          <button class="filter-chip warn-filter" id="filter-warn" type="button" data-filter="attention">⚠️ Attention</button>
+          <button class="filter-chip good-filter" id="filter-good" type="button" data-filter="good">✅ Optimal</button>
+        </div>
+      </div>
+
+      <div class="map-viewport-wrapper">
+        <div id="map" class="svg-map-container" role="img" aria-label="District interactive medical facility map"></div>
+        
+        <!-- Live Selected Centre Telemetry HUD overlay -->
+        <div id="map-hud" class="map-telemetry-hud" aria-live="polite">
+          <div class="hud-header">
+            <span class="hud-tag" id="hud-type">PHC</span>
+            <span class="hud-name" id="hud-name">Select any facility on map</span>
+            <span class="hud-score-badge" id="hud-score">--</span>
+          </div>
+          <div class="hud-metrics" id="hud-metrics">
+            <div class="hud-metric-item">
+              <span class="hud-metric-lbl" id="hud-lbl-doc">Doctor Attendance</span>
+              <span class="hud-metric-val" id="hud-doc">--</span>
+            </div>
+            <div class="hud-metric-item">
+              <span class="hud-metric-lbl" id="hud-lbl-beds">Free Beds</span>
+              <span class="hud-metric-val" id="hud-beds">--</span>
+            </div>
+            <div class="hud-metric-item">
+              <span class="hud-metric-lbl" id="hud-lbl-stock">Min Stock Cover</span>
+              <span class="hud-metric-val" id="hud-stock">--</span>
+            </div>
+          </div>
+          <div class="hud-actions" id="hud-actions">
+            <button class="hud-btn primary" id="hud-btn-forecast" type="button">📈 View Demand Forecast</button>
+            <button class="hud-btn danger" id="hud-btn-escalate" type="button">⚡ Escalate to CMO</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="map-footer-legend">
+        <div class="legend-group">
+          <span class="legend-item"><span class="legend-shape node-good"></span> <span id="leg-good">Optimal Status</span></span>
+          <span class="legend-item"><span class="legend-shape node-warn"></span> <span id="leg-att">Attention Required</span></span>
+          <span class="legend-item"><span class="legend-shape node-crit"></span> <span id="leg-crit">Critical Alert</span></span>
+        </div>
+        <div class="legend-group">
+          <span class="legend-item"><span class="legend-shape chc-shape"></span> <span id="leg-chc">CHC (Community)</span></span>
+          <span class="legend-item"><span class="legend-shape phc-shape"></span> <span id="leg-phc">PHC (Primary)</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Priority Interventions & Escalations -->
+    <div class="glass-card flagged-panel">
+      <div class="card-header">
+        <div class="card-title-group">
+          <span class="card-icon" aria-hidden="true">🚨</span>
+          <h2 class="card-heading" id="lbl-flagged">Centres Requiring Urgent Intervention</h2>
+        </div>
+        <span class="alert-count-pill" id="flagged-count">--</span>
+      </div>
+      <div class="card-sub-banner" id="flagged-sub-banner">
+        Automated deficiency detection across doctors, bed availability, stock-out risk, and lab tests.
+      </div>
+      <ul id="flagged" class="flagged-list-container" aria-live="polite"></ul>
+      <p id="msg" class="action-feedback-msg" role="alert" aria-live="assertive"></p>
+    </div>
+  </section>
+
+  <!-- ── 3. FORECAST & SMART REDISTRIBUTION SPLIT ── -->
+  <section class="grid-split" aria-label="Predictive Analytics and Supply Redistribution">
+    
+    <!-- Left: 14-Day Demand Forecast -->
+    <div class="glass-card forecast-panel">
+      <div class="card-header">
+        <div class="card-title-group">
+          <span class="card-icon" aria-hidden="true">📈</span>
+          <h2 class="card-heading" id="lbl-forecast">14-Day Holt-Winters Demand Forecast</h2>
+        </div>
+        <span class="model-badge">Damped Trend • α=0.40</span>
+      </div>
+
+      <div class="chart-filter-bar">
+        <div class="filter-pair">
+          <label for="fc-c" class="control-label" id="lbl-centre">Facility</label>
+          <select id="fc-c" class="command-select" aria-label="Select facility for forecast"></select>
+        </div>
+        <div class="filter-pair">
+          <label for="fc-m" class="control-label" id="lbl-medicine">Medicine</label>
+          <select id="fc-m" class="command-select" aria-label="Select medicine for forecast"></select>
+        </div>
+      </div>
+
+      <div class="canvas-chart-wrapper">
+        <canvas id="forecast-canvas" height="240" aria-label="14-day medicine consumption and demand forecast curve"></canvas>
+      </div>
+
+      <div class="forecast-table-wrapper scrollable-table">
+        <div id="fc-table" class="data-table-container"></div>
+      </div>
+    </div>
+
+    <!-- Right: Smart Inventory Redistribution -->
+    <div class="glass-card redis-panel">
+      <div class="card-header">
+        <div class="card-title-group">
+          <span class="card-icon" aria-hidden="true">🔄</span>
+          <h2 class="card-heading" id="lbl-redis">AI Supply Chain Redistribution Matrix</h2>
+        </div>
+        <span class="transfers-count-badge" id="redis-count">Calculating…</span>
+      </div>
+      <div class="card-sub-banner" id="redis-sub-banner">
+        Optimal nearest-donor algorithm ensuring surplus facilities supply stock-out risks without falling below 14-day reserves.
+      </div>
+      <div id="redis" class="redis-table-wrapper scrollable-table"></div>
+    </div>
+  </section>
+
+  <!-- ── 4. MASTER HEALTH CENTRES REGISTRY ── -->
+  <section class="full-panel" aria-labelledby="lbl-centres-sec">
+    <div class="glass-card">
+      <div class="card-header">
+        <div class="card-title-group">
+          <span class="card-icon" aria-hidden="true">🏥</span>
+          <h2 class="card-heading" id="lbl-centres-sec">All 12 District Health Facilities (Live Telemetry)</h2>
+        </div>
+        <div class="table-search-box">
+          <input id="table-search" type="search" placeholder="Filter facilities…" aria-label="Filter facilities by name or type">
+        </div>
+      </div>
+      <div class="master-table-wrapper scrollable-table">
+        <table id="ctable" class="command-table" aria-label="Health facilities operational telemetry table"></table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 5. ESCALATIONS & MULTILINGUAL AI ASSISTANT SPLIT ── -->
+  <section class="grid-split" aria-label="Escalation Tickets and Multilingual Assistant">
+    
+    <!-- Left: Operational Escalations -->
+    <div class="glass-card escalations-panel">
+      <div class="card-header">
+        <div class="card-title-group">
+          <span class="card-icon" aria-hidden="true">📋</span>
+          <h2 class="card-heading" id="lbl-esc">District Administrative Escalations</h2>
+        </div>
+        <span class="esc-count-pill" id="esc-open-count">0 Open</span>
+      </div>
+      <div class="card-sub-banner" id="esc-sub-banner">
+        Audit trail of critical interventions dispatched to District Chief Medical Officer (CMO).
+      </div>
+      <ul id="esc" class="escalations-list-container scrollable-list" aria-live="polite"></ul>
+    </div>
+
+    <!-- Right: Multilingual Clinical Command Assistant (THE BOT) -->
+    <div class="glass-card assistant-panel">
+      <div class="card-header">
+        <div class="card-title-group">
+          <span class="card-icon" aria-hidden="true">🤖</span>
+          <h2 class="card-heading" id="lbl-ask">District Health AI Copilot</h2>
+        </div>
+        <span id="ai-badge" class="ai-status-pill">RULES + GEMINI PRO</span>
+      </div>
+
+      <!-- Quick Query Prompt Chips -->
+      <div class="prompt-chips-wrapper" role="group" aria-label="Suggested quick questions for AI">
+        <span class="prompt-chips-label" id="lbl-quick-prompts">Quick Queries:</span>
+        <div class="prompt-chips-scroll" id="prompt-chips">
+          <button class="chip-query" type="button" data-q="which centre has critical medicine stock-out?">🚨 Stock-out Risks</button>
+          <button class="chip-query" type="button" data-q="show doctor attendance deficits across centres">👨‍⚕️ Doctor Attendance</button>
+          <button class="chip-query" type="button" data-q="which centres have zero free beds?">🛏️ Bed Availability</button>
+          <button class="chip-query" type="button" data-q="summarize recommended medicine transfers">🔄 Supply Transfers</button>
+        </div>
+      </div>
+
+      <!-- Chat History -->
+      <div id="chat-wrap" class="chat-viewport">
+        <div id="chat" class="chat-messages-container" role="log" aria-live="polite" aria-label="Chat messages history"></div>
+        
+        <!-- Chat Input Form -->
+        <form id="askf" class="chat-input-bar" autocomplete="off">
+          <label for="q" class="sr-only" id="lbl-ask-sr">Ask the District Health Copilot</label>
+          <input id="q" type="text" maxlength="300" required autocomplete="off" placeholder="Ask about medicine stock, beds, doctors, transfers…">
+          <button type="submit" id="send-btn" class="send-action-btn" aria-label="Send query">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="22" y1="2" x2="11" y2="13"></line>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+            <span class="sr-only" id="lbl-send">Send</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     FLOATING TOAST CONTAINER & ACCESSIBILITY LIVE REGION
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="toast-container" class="toast-hub" aria-live="assertive" aria-atomic="true"></div>
+
+<!-- Application Script -->
+<script src="/static/app.js"></script>
+</body>
+</html>
