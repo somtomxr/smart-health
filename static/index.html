@@ -48,6 +48,11 @@
       <input id="tok" type="password" autocomplete="off" maxlength="64" placeholder="demo-admin" aria-label="Admin authentication token">
     </div>
 
+    <!-- Admin Control Button -->
+    <button id="btn-admin-demo" class="action-btn" type="button" title="Open Admin Telemetry Simulator" style="background: rgba(168, 85, 247, 0.2); border-color: rgba(168, 85, 247, 0.4); color: #d8b4fe;">
+      <span>🛠️ Admin Console</span>
+    </button>
+
     <!-- Refresh Action Button -->
     <button id="refresh-btn" class="action-btn primary-action" type="button" aria-label="Refresh telemetry data">
       <svg class="refresh-svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -141,8 +146,9 @@
             </div>
           </div>
           <div class="hud-actions" id="hud-actions">
-            <button class="hud-btn primary" id="hud-btn-forecast" type="button">📈 View Demand Forecast</button>
-            <button class="hud-btn danger" id="hud-btn-escalate" type="button">⚡ Escalate to CMO</button>
+            <button class="hud-btn primary" id="hud-btn-forecast" type="button">📈 Demand Forecast</button>
+            <button class="hud-btn danger" id="hud-btn-escalate" type="button">⚡ Escalate</button>
+            <button class="hud-btn admin" id="hud-btn-admin-edit" type="button">🛠️ Admin Simulator</button>
           </div>
         </div>
       </div>
@@ -269,7 +275,18 @@
           <span class="card-icon" aria-hidden="true">🤖</span>
           <h2 class="card-heading" id="lbl-ask">District Health AI Copilot</h2>
         </div>
-        <span id="ai-badge" class="ai-status-pill">RULES + GEMINI PRO</span>
+        <span id="ai-badge" class="ai-status-pill">OFFLINE AI ENGINE</span>
+      </div>
+
+      <!-- Offline Rule Fallback / AI Status Notice -->
+      <div class="ai-mode-banner" id="ai-mode-banner">
+        <div class="ai-mode-badge-wrap">
+          <span class="ai-mode-icon">⚡</span>
+          <span class="ai-mode-status" id="ai-mode-status">Offline Rule-Engine Active (Zero Quota)</span>
+        </div>
+        <div class="ai-mode-desc" id="ai-mode-desc">
+          Deterministic local triage engine. To enable free-form generative LLM responses, set <code>GEMINI_API_KEY</code>.
+        </div>
       </div>
 
       <!-- Quick Query Prompt Chips -->
@@ -299,11 +316,67 @@
             <span class="sr-only" id="lbl-send">Send</span>
           </button>
         </form>
+        <div class="chat-input-hint" id="chat-hint">
+          <span>💡 <strong>Offline Mode:</strong> Click quick queries above or type medicine/bed questions (e.g., <em>paracetamol, beds, doctors</em>)</span>
+        </div>
       </div>
     </div>
   </section>
 
 </main>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     ADMIN TELEMETRY OVERRIDE & CRISIS SIMULATOR MODAL
+     ═══════════════════════════════════════════════════════════════ -->
+<div id="admin-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="admin-modal-title">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title-wrap">
+        <span class="modal-icon">🛠️</span>
+        <h3 id="admin-modal-title">Admin Telemetry & Crisis Simulator</h3>
+      </div>
+      <button class="modal-close-btn" id="admin-modal-close" type="button" aria-label="Close dialog">&times;</button>
+    </div>
+    <div class="modal-body">
+      <p class="modal-desc">
+        Direct administrative control over facility telemetry. Simulate surges, bed shortages, or medicine stock-outs to demonstrate real-time AI triage and redistribution.
+      </p>
+      <div class="modal-facility-badge" id="admin-facility-name">PHC Rampur</div>
+      
+      <form id="admin-edit-form" class="admin-form">
+        <div class="form-row">
+          <label for="admin-free-beds">Free Beds (Available):</label>
+          <input type="number" id="admin-free-beds" min="0" max="50" required>
+        </div>
+        <div class="form-row">
+          <label for="admin-doc-present">Doctors Present:</label>
+          <input type="number" id="admin-doc-present" min="0" max="20" required>
+        </div>
+        <div class="form-row">
+          <label for="admin-para-stock">Paracetamol Stock (Units):</label>
+          <input type="number" id="admin-para-stock" min="0" max="10000" required>
+        </div>
+        <div class="form-row">
+          <label for="admin-ors-stock">ORS Sachets (Units):</label>
+          <input type="number" id="admin-ors-stock" min="0" max="10000" required>
+        </div>
+        
+        <div class="simulator-presets">
+          <span class="presets-label">⚡ 1-Click Demo Scenarios:</span>
+          <div class="presets-btns">
+            <button type="button" class="btn-preset-danger" id="preset-crisis">🚨 Simulate Crisis (0 Beds & Low Stock)</button>
+            <button type="button" class="btn-preset-good" id="preset-restore">✅ Restore Healthy State</button>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-cancel" id="admin-modal-cancel">Cancel</button>
+          <button type="submit" class="btn-save" id="admin-modal-save">💾 Save & Recalculate AI</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════════════════════════════════════════════════════════
      FLOATING TOAST CONTAINER & ACCESSIBILITY LIVE REGION

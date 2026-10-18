@@ -109,8 +109,8 @@ const T = {
     chat_ph: "Ask about medicine stock, beds, doctors, transfers…",
     send_lbl: "Send",
     thinking: "Analyzing district health telemetry…",
-    via_gemini: "via Gemini Pro LLM",
-    via_rules: "via Algorithmic Intelligence Engine",
+    via_gemini: "✨ via Google Gemini AI",
+    via_rules: "⚡ via Offline Rule Engine (Zero Token Usage)",
 
     // Toasts
     toast_token_req: "Admin token required to perform this action.",
@@ -222,8 +222,8 @@ const T = {
     chat_ph: "स्टॉक, बेड, डॉक्टर या ट्रांसफर के बारे में पूछें…",
     send_lbl: "भेजें",
     thinking: "स्वास्थ्य डेटा का विश्लेषण हो रहा है…",
-    via_gemini: "वाया जेमिनी प्रो एआई",
-    via_rules: "वाया एनालिटिक्स इंजन",
+    via_gemini: "✨ गूगल जेमिनी एआई द्वारा",
+    via_rules: "⚡ ऑफलाइन रूल इंजन द्वारा (शून्य टोकन खपत)",
 
     // Toasts
     toast_token_req: "इस कार्रवाई के लिए व्यवस्थापक टोकन आवश्यक है।",
@@ -335,8 +335,8 @@ const T = {
     chat_ph: "ಔಷಧ, ಹಾಸಿಗೆ, ವೈದ್ಯರು, ವರ್ಗಾವಣೆ ಬಗ್ಗೆ ಕೇಳಿ…",
     send_lbl: "ಕಳುಹಿಸಿ",
     thinking: "ಡೇಟಾ ವಿಶ್ಲೇಷಿಸಲಾಗುತ್ತಿದೆ…",
-    via_gemini: "ಜೆಮಿನಿ ಪ್ರೊ ಎಐ ಮೂಲಕ",
-    via_rules: "ವಿಶ್ಲೇಷಣಾ ಇಂಜಿನ್ ಮೂಲಕ",
+    via_gemini: "✨ ಗೂಗಲ್ ಜೆಮಿನಿ ಎಐ ಮೂಲಕ",
+    via_rules: "⚡ ಆಫ್‌ಲೈನ್ ನಿಯಮ ಇಂಜಿನ್ ಮೂಲಕ (ಶೂನ್ಯ ಟೋಕನ್)",
 
     // Toasts
     toast_token_req: "ಈ ಕ್ರಮಕ್ಕಾಗಿ ಆಡಳಿತ ಟೋಕನ್ ಅಗತ್ಯವಿದೆ.",
@@ -353,7 +353,7 @@ if (!T[currentLang]) currentLang = "en";
 
 let snap = null;
 let snapEsc = [];
-let adminToken = "";
+let adminToken = "demo-admin";
 let countdownSeconds = 30;
 let refreshIntervalTimer = null;
 let countdownTimer = null;
@@ -877,12 +877,51 @@ function selectFacility(c, updateMap = true) {
     btnEscalate.onclick = () => triggerEscalate(c);
   }
 
+  const btnAdminEdit = $("#hud-btn-admin-edit");
+  if (btnAdminEdit) {
+    btnAdminEdit.onclick = () => openAdminModal(c);
+  }
+
   if (updateMap) {
     // Update SVG selection highlight
     $$(".map-node").forEach((node) => {
       node.classList.toggle("selected", node.dataset.id === String(c.id));
     });
   }
+}
+
+let currentEditFacility = null;
+
+function openAdminModal(facility) {
+  if (!facility) return;
+  currentEditFacility = facility;
+  const modal = $("#admin-modal");
+  const nameEl = $("#admin-facility-name");
+  const bedsInput = $("#admin-free-beds");
+  const docInput = $("#admin-doc-present");
+  const paraInput = $("#admin-para-stock");
+  const orsInput = $("#admin-ors-stock");
+
+  if (nameEl) nameEl.textContent = `${facility.name} • ${facility.type}`;
+  if (bedsInput) {
+    bedsInput.value = facility.beds_free;
+    bedsInput.max = String(facility.beds_total);
+  }
+  if (docInput) {
+    docInput.value = facility.doc_present;
+    docInput.max = String(facility.doc_sched);
+  }
+  const para = facility.meds?.find((m) => m.med === "Paracetamol 500mg");
+  const ors = facility.meds?.find((m) => m.med === "ORS Sachet");
+  if (paraInput) paraInput.value = para ? para.qty : 500;
+  if (orsInput) orsInput.value = ors ? ors.qty : 300;
+
+  if (modal) modal.classList.remove("hidden");
+}
+
+function closeAdminModal() {
+  const modal = $("#admin-modal");
+  if (modal) modal.classList.add("hidden");
 }
 
 // ── 11. FLAGGED CENTRES (CRISIS INTERVENTION FEED) ────────────────
@@ -1397,7 +1436,13 @@ async function handleAssistantQuery(queryText) {
 
     const badge = $("#ai-badge");
     if (badge) {
-      badge.textContent = res.source === "gemini" ? "GEMINI 1.5 PRO" : "ALGORITHMIC RULES";
+      badge.textContent = res.source === "gemini" ? "✨ GEMINI 2.0 FLASH" : "⚡ OFFLINE RULE ENGINE";
+    }
+    const modeStatus = $("#ai-mode-status");
+    const modeDesc = $("#ai-mode-desc");
+    if (res.source === "gemini") {
+      if (modeStatus) modeStatus.textContent = "Google Gemini AI Active";
+      if (modeDesc) modeDesc.textContent = "Live generative AI reasoning with real-time district telemetry context.";
     }
 
     appendChatMessage(res.answer, "bot", res.source);
@@ -1474,6 +1519,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // 2. Admin Token Input
   const tokInput = $("#tok");
   if (tokInput) {
+    tokInput.value = adminToken;
     tokInput.addEventListener("input", (e) => {
       adminToken = e.target.value.trim();
     });
@@ -1530,6 +1576,77 @@ document.addEventListener("DOMContentLoaded", () => {
       if (query) handleAssistantQuery(query);
     });
   });
+
+  // 9. Admin Simulator Modal Controls
+  const btnAdminDemo = $("#btn-admin-demo");
+  if (btnAdminDemo) {
+    btnAdminDemo.addEventListener("click", () => {
+      const target = snap?.centres?.find((c) => c.id === selectedFacilityId) || snap?.centres?.[0];
+      if (target) openAdminModal(target);
+    });
+  }
+
+  const modalClose = $("#admin-modal-close");
+  const modalCancel = $("#admin-modal-cancel");
+  if (modalClose) modalClose.addEventListener("click", closeAdminModal);
+  if (modalCancel) modalCancel.addEventListener("click", closeAdminModal);
+
+  const presetCrisis = $("#preset-crisis");
+  if (presetCrisis) {
+    presetCrisis.addEventListener("click", () => {
+      const beds = $("#admin-free-beds");
+      const doc = $("#admin-doc-present");
+      const para = $("#admin-para-stock");
+      const ors = $("#admin-ors-stock");
+      if (beds) beds.value = "0";
+      if (doc) doc.value = "1";
+      if (para) para.value = "15";
+      if (ors) ors.value = "10";
+    });
+  }
+
+  const presetRestore = $("#preset-restore");
+  if (presetRestore) {
+    presetRestore.addEventListener("click", () => {
+      const beds = $("#admin-free-beds");
+      const doc = $("#admin-doc-present");
+      const para = $("#admin-para-stock");
+      const ors = $("#admin-ors-stock");
+      if (beds) beds.value = currentEditFacility ? String(currentEditFacility.beds_total) : "8";
+      if (doc) doc.value = currentEditFacility ? String(currentEditFacility.doc_sched) : "2";
+      if (para) para.value = "2500";
+      if (ors) ors.value = "1800";
+    });
+  }
+
+  const adminForm = $("#admin-edit-form");
+  if (adminForm) {
+    adminForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!currentEditFacility) return;
+      const payload = {
+        beds_free: parseInt($("#admin-free-beds").value, 10),
+        doc_present: parseInt($("#admin-doc-present").value, 10),
+        stock: {
+          "Paracetamol 500mg": parseInt($("#admin-para-stock").value, 10),
+          "ORS Sachet": parseInt($("#admin-ors-stock").value, 10)
+        }
+      };
+      try {
+        await apiCall(`/api/centres/${currentEditFacility.id}`, {
+          method: "PUT",
+          body: JSON.stringify(payload)
+        });
+        closeAdminModal();
+        showToast(`Telemetry updated for ${currentEditFacility.name}! AI triage recalculated.`, "ok");
+        await synchronizeTelemetry();
+        const updated = snap?.centres?.find((c) => c.id === currentEditFacility.id);
+        if (updated) selectFacility(updated, true);
+      } catch (err) {
+        showToast(err.message || "Failed to update telemetry. Check Admin Token.", "err");
+      }
+    });
+  }
 
   // 9. Window Resize handler for canvas
   let resizeTimer = null;
